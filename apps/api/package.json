@@ -4,9 +4,13 @@
   "description": "Guiabolso Clone server",
   "main": "dist/index.js",
   "scripts": {
+    "start": "tsx src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "Gilmar Andrade",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "tsx": "^4.20.5"
+  }
 }
