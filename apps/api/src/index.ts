@@ -1,4 +1,4 @@
-import { formatFileSize } from "./formatter";
+import { formatFileSize } from "@utils/formatter";
 
 
 if (process.argv.length > 2) {

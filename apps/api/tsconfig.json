@@ -26,6 +26,12 @@
 		"isolatedModules": true,
 
         // Requires you to write your type imports & exports using explicit syntax
-        "verbatimModuleSyntax": true
+        "verbatimModuleSyntax": true,
+
+        "baseUrl": "./",
+
+        "paths": {
+            "@utils/*": ["src/utils/*"]
+        }
 	},
 }
