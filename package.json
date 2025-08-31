@@ -1,0 +1,24 @@
+{
+  "name": "@guiabolso/guiabolso-ng",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "description": "Guiabolso Clone Next Generation Monorepo",
+  "scripts": {
+    "build": "npm run build:package-a && npm run build:package-b",
+    "build:package-a": "cd packages/package-a && npm run build",
+    "build:package-b": "cd packages/package-b && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gilmarandrade/guiabolso-ng.git"
+  },
+  "keywords": [],
+  "author": "Gilmar Andrade",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gilmarandrade/guiabolso-ng/issues"
+  },
+  "homepage": "https://github.com/gilmarandrade/guiabolso-ng#readme"
+}
