@@ -1,1 +1,1 @@
-console.log('Hello Typescript!')
+console.log(process.env.HELLO_ENV);
