@@ -1,1 +1,1 @@
-console.log(process.env.HELLO_ENV);
+console.log("HMR", process.env.HELLO_ENV);
