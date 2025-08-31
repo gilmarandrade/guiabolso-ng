@@ -12,5 +12,9 @@
   "license": "MIT",
   "devDependencies": {
     "tsx": "^4.20.5"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
   }
 }
