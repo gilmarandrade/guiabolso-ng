@@ -1,1 +1,5 @@
-console.log("HMR", process.env.HELLO_ENV);
+import { Obvious } from "./Obvius"
+
+const obvious = new Obvious()
+
+obvious.run()
