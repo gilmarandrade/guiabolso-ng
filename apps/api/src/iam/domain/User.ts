@@ -1,5 +1,6 @@
 import type { Email } from "./Email"
 import type { HashedPassword } from "./HashedPassword"
+import { UserRegisteredEvent, type DomainEventsPublisher } from "./types"
 import type { UserId } from "./UserId"
 
 export class User {
@@ -10,7 +11,11 @@ export class User {
     private _createdAt: Date
     private _updatedAt: Date
 
-    private constructor() {}
+    private _domainEventsPublisher: DomainEventsPublisher
+
+    private constructor(domainEventsPublisher: DomainEventsPublisher) {
+        this._domainEventsPublisher = domainEventsPublisher
+    }
 
     get id(): UserId { return this._id }
     get email(): Email { return this._email }
@@ -22,15 +27,19 @@ export class User {
         userId: UserId,
         email: Email,
         name: string,
-        hashedPassword: HashedPassword
+        hashedPassword: HashedPassword,
+        domainEventsPublisher: DomainEventsPublisher
     ) {
-        const user = new User()
+        const user = new User(domainEventsPublisher)
         user._id = userId
         user._email = email
         user._name = name
         user._hashedPassword = hashedPassword
         user._createdAt = new Date()
         user._updatedAt = new Date(user._createdAt)
+
+        const userRegisteredEvent = new UserRegisteredEvent(user._id.value, user._email.value, user._name, user._hashedPassword.value)
+        user._domainEventsPublisher.emit(userRegisteredEvent)
 
         return user
     }
@@ -42,8 +51,9 @@ export class User {
         hashedPassword: HashedPassword,
         createdAt: Date,
         updatedAt: Date,
+        domainEventsPublisher: DomainEventsPublisher
     ) {
-        const user = new User()
+        const user = new User(domainEventsPublisher)
         user._id = userId
         user._email = email
         user._name = name

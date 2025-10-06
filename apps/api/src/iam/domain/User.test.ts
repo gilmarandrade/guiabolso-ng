@@ -4,27 +4,49 @@ import { User } from './User'
 import { UserId } from './UserId'
 import { Email } from './Email'
 import { HashedPassword } from './HashedPassword'
+import { UserRegisteredEvent, type DomainEvent, type DomainEventsPublisher } from './types'
 
-describe('User (agreggate root) unit test', () => {
+export class MockDomainEventsPublisher implements DomainEventsPublisher {
+    public events: DomainEvent[] = []
+    
+    emit(event: DomainEvent) {
+        this.events.push(event)
+    }
+}
+
+describe('User (aggregate root) unit test', () => {
     it('should register a new user', () => {
+        const mockDomainEventPublisher = new MockDomainEventsPublisher()
+
         const userId = new UserId('valid-id')
         const email = new Email('valid@email.com')
         const name = 'user valid name'
         const hashedPassword = new HashedPassword('valid hashed password')
-        const sut = User.register(userId, email, name, hashedPassword)
+        const sut = User.register(userId, email, name, hashedPassword, mockDomainEventPublisher)
 
         assert.strictEqual(sut.id, userId)
         assert.strictEqual(sut.email, email)
         assert.strictEqual(sut.name, name)
+
+        const userRegisteredEvent = mockDomainEventPublisher.events[0] as UserRegisteredEvent
+        assert.ok(userRegisteredEvent.eventId)
+        assert.ok(userRegisteredEvent.occurredAt instanceof Date)
+        assert.equal(userRegisteredEvent.aggregateId, userId.value)
+        assert.equal(userRegisteredEvent.email, email.value)
+        assert.equal(userRegisteredEvent.name, name)
+        assert.equal(userRegisteredEvent.hashedPassword, hashedPassword.value)
+
     })
     it('should reconstitute a user from persistence', () => {
+        const mockDomainEventPublisher = new MockDomainEventsPublisher()
+
         const userId = new UserId('valid-id')
         const email = new Email('valid@email.com')
         const name = 'user valid name'
         const hashedPassword = new HashedPassword('valid hashed password')
         const createdAt = new Date()
         const updatedAt = new Date()
-        const sut = User.reconstitute(userId, email, name, hashedPassword, createdAt, updatedAt)
+        const sut = User.reconstitute(userId, email, name, hashedPassword, createdAt, updatedAt, mockDomainEventPublisher)
 
         assert.strictEqual(sut.id, userId)
         assert.strictEqual(sut.email, email)

@@ -1,5 +1,5 @@
 export class UserId {
-    private readonly value: string
+    public readonly value: string
 
     constructor(value: string) {
         if(!this.isValid(value)) {
