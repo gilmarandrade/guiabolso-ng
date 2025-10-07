@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { RegisterUserUseCase } from './RegisterUserUsecase'
 import { Email } from '../domain/Email'
-import { User } from '../domain/User'
+import { UserRegisteredEvent } from '../domain/domain-events'
 
 describe('RegisterUserUseCase', () => {
   let userRepository: any
   let passwordHasher: any
+  let passwordPolicy: any
   let eventPublisher: any
   let useCase: RegisterUserUseCase
 
@@ -18,10 +19,14 @@ describe('RegisterUserUseCase', () => {
     passwordHasher = {
       hash: vi.fn()
     }
+    passwordPolicy = {
+        satisfies: vi.fn().mockReturnValue(true),
+        getDescription: vi.fn().mockReturnValue('Password is not valid')
+    }
     eventPublisher = {
       publish: vi.fn()
     }
-    useCase = new RegisterUserUseCase(userRepository, passwordHasher, eventPublisher)
+    useCase = new RegisterUserUseCase(userRepository, passwordHasher, passwordPolicy, eventPublisher)
   })
 
   it('should throw if user with email already exists', async () => {
@@ -32,6 +37,15 @@ describe('RegisterUserUseCase', () => {
     expect(userRepository.findByEmail).toHaveBeenCalledWith(new Email('test@example.com'))
   })
 
+  it('should throw if password does not satisfy policies', async () => {
+    userRepository.findByEmail.mockResolvedValue(null)
+    passwordPolicy.satisfies.mockReturnValueOnce(false)
+    
+    await expect(
+      useCase.execute({ email: 'test@example.com', name: 'Test', password: '123456' })
+    ).rejects.toThrow('Password is not valid')
+  })
+
   it('should save user and return userId', async () => {
     userRepository.findByEmail.mockResolvedValue(null)
     const fakeUserId = { value: 'user-123' }
@@ -39,19 +53,6 @@ describe('RegisterUserUseCase', () => {
     passwordHasher.hash.mockResolvedValue('hashed-password')
     userRepository.save.mockResolvedValue(undefined)
     eventPublisher.publish.mockResolvedValue(undefined)
-
-    // Spy on User.create and user.clearEvents
-    const clearEvents = vi.fn()
-    vi.spyOn(User, 'create').mockImplementation((id, email, name, hashedPassword) => {
-      return {
-        id,
-        email,
-        name,
-        hashedPassword,
-        domainEvents: ['event1'],
-        clearEvents
-      } as any
-    })
 
     const result = await useCase.execute({
       email: 'new@example.com',
@@ -62,7 +63,7 @@ describe('RegisterUserUseCase', () => {
     expect(userRepository.findByEmail).toHaveBeenCalledWith(new Email('new@example.com'))
     expect(passwordHasher.hash).toHaveBeenCalledWith('password')
     expect(userRepository.save).toHaveBeenCalled()
-    expect(eventPublisher.publish).toHaveBeenCalledWith(['event1'])
+    expect(eventPublisher.publish.mock.calls[0][0][0]).toBeInstanceOf(UserRegisteredEvent)
     expect(result).toEqual({ userId: 'user-123' })
   })
 })
