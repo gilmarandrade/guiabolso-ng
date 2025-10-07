@@ -34,7 +34,7 @@ describe('RegisterUserUseCase', () => {
         } as unknown as PasswordPolicy
 
         eventPublisher = {
-            publish: vi.fn().mockResolvedValue(undefined)
+            publish: vi.fn()
         } as unknown as DomainEventsPublisher
 
         useCase = new RegisterUserUseCase(userRepository, passwordHasher, passwordPolicy, eventPublisher)
@@ -61,16 +61,33 @@ describe('RegisterUserUseCase', () => {
     })
 
     it('should save user and return userId', async () => {
-        const result = await useCase.execute({
-            email: 'new@example.com',
-            name: 'New User',
-            password: 'password'
-        })
+        // Arrange
+        const email = 'new@example.com'
+        const name = 'New User'
+        const password = 'password'
+        const fakeUserId = { value: 'user-123' }
+        asMock(userRepository.nextId).mockReturnValueOnce(fakeUserId)
+        asMock(passwordHasher.hash).mockResolvedValueOnce('hashed-password')
+        asMock(userRepository.save).mockResolvedValueOnce(undefined)
+        asMock(eventPublisher.publish).mockResolvedValueOnce(undefined)
 
-        expect(userRepository.findByEmail).toHaveBeenCalledWith(new Email('new@example.com'))
-        expect(passwordHasher.hash).toHaveBeenCalledWith('password')
+        // Act
+        const result = await useCase.execute({ email, name, password })
+
+        // Assert
+        expect(userRepository.findByEmail).toHaveBeenCalledWith(new Email(email))
+        expect(passwordHasher.hash).toHaveBeenCalledWith(password)
         expect(userRepository.save).toHaveBeenCalled()
-        expect(asMock(eventPublisher.publish).mock.calls[0][0][0]).toBeInstanceOf(UserRegisteredEvent)
-        expect(result).toEqual({ userId: 'user-123' })
+        // Check that the saved user has the correct properties
+        const savedUser = asMock(userRepository.save).mock.calls[0][0]
+        expect(savedUser.id).toEqual(fakeUserId)
+        expect(savedUser.email.value).toBe(email)
+        expect(savedUser.name).toBe(name)
+        // expect(savedUser.hashedPassword).toBe('hashed-password')
+        // Check event publishing
+        expect(eventPublisher.publish).toHaveBeenCalled()
+        const publishedEvent = asMock(eventPublisher.publish).mock.calls[0][0][0]
+        expect(publishedEvent).toBeInstanceOf(UserRegisteredEvent)
+        expect(result).toEqual({ userId: fakeUserId.value })
     })
 })
