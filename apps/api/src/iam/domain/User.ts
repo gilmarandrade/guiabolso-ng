@@ -1,6 +1,6 @@
 import type { Email } from "./Email"
 import type { HashedPassword } from "./HashedPassword"
-import { UserRegisteredEvent, type DomainEventsPublisher } from "./domain-events"
+import { UserRegisteredEvent, type DomainEvent } from "./domain-events"
 import type { UserId } from "./UserId"
 
 export class User {
@@ -11,11 +11,9 @@ export class User {
     private _createdAt: Date
     private _updatedAt: Date
 
-    private _domainEventsPublisher: DomainEventsPublisher
+    private _events: DomainEvent[] = []
 
-    private constructor(domainEventsPublisher: DomainEventsPublisher) {
-        this._domainEventsPublisher = domainEventsPublisher
-    }
+    private constructor() {}
 
     get id(): UserId { return this._id }
     get email(): Email { return this._email }
@@ -23,14 +21,16 @@ export class User {
     get createdAt(): Date { return this._createdAt }
     get updatedAt(): Date { return this._updatedAt }
 
-    static register(
+    get domainEvents(): DomainEvent[] { return this._events }
+    clearEvents(): void { this._events = [] }
+
+    static create(
         userId: UserId,
         email: Email,
         name: string,
         hashedPassword: HashedPassword,
-        domainEventsPublisher: DomainEventsPublisher
     ) {
-        const user = new User(domainEventsPublisher)
+        const user = new User()
         user._id = userId
         user._email = email
         user._name = name
@@ -39,7 +39,7 @@ export class User {
         user._updatedAt = new Date(user._createdAt)
 
         const userRegisteredEvent = new UserRegisteredEvent(user._id.value, user._email.value, user._name, user._hashedPassword.value)
-        user._domainEventsPublisher.emit(userRegisteredEvent)
+        user._events.push(userRegisteredEvent)
 
         return user
     }
@@ -50,10 +50,9 @@ export class User {
         name: string,
         hashedPassword: HashedPassword,
         createdAt: Date,
-        updatedAt: Date,
-        domainEventsPublisher: DomainEventsPublisher
+        updatedAt: Date
     ) {
-        const user = new User(domainEventsPublisher)
+        const user = new User()
         user._id = userId
         user._email = email
         user._name = name

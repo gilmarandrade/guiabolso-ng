@@ -3,7 +3,7 @@ import assert from 'node:assert'
 import { InMemoryUserRepository } from '../infra/InMemoryUserRepository'
 import type { PasswordHasher } from '../domain/types'
 import { HashedPassword } from '../domain/HashedPassword'
-import type { DomainEvent, DomainEventsPublisher } from '../domain/domain-events'
+import { UserRegisteredEvent, type DomainEvent, type DomainEventsPublisher } from '../domain/domain-events'
 import { RegisterUserUseCase } from './RegisterUserUsecase'
 import { User } from '../domain/User'
 import { UserId } from '../domain/UserId'
@@ -15,12 +15,11 @@ class MockPasswordHasher implements PasswordHasher {
     }
 }
 
-// TODO duplicated
 export class MockDomainEventsPublisher implements DomainEventsPublisher {
     public events: DomainEvent[] = []
     
-    emit(event: DomainEvent) {
-        this.events.push(event)
+    async publish(events: DomainEvent[]) {
+        this.events.push(...events)
     }
 }
 
@@ -57,12 +56,11 @@ describe('Register User Usecase unit test', () => {
         const passwordHasher = new MockPasswordHasher()
         const eventPublisher = new MockDomainEventsPublisher()
 
-        const userWithEmail = User.register(
+        const userWithEmail = User.create(
             new UserId('233'),
             new Email('same-email@email.com'),
             'any name',
-            new HashedPassword('any password'),
-            eventPublisher
+            new HashedPassword('any password')
         )
         await userRepository.save(userWithEmail)
 
@@ -105,5 +103,6 @@ describe('Register User Usecase unit test', () => {
 
         const result = await sut.execute(command)
         assert.equal(result.userId, '1')
+        assert.ok(eventPublisher.events[0] instanceof UserRegisteredEvent)
     })
 })

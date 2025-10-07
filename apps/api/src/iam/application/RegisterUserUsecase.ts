@@ -32,18 +32,20 @@ export class RegisterUserUseCase {
             }
 
             const userId = this.userRepository.nextId()
-            // TODO create PasswordHasher Domain Service
+            // TODO validate if password policy is valid
             const hashedPassword = await this.passwordHasher.hash(command.password)
 
-            const user = User.register(
+            const user = User.create(
                 userId,
                 email,
                 command.name,
-                hashedPassword,
-                this.eventPublisher
+                hashedPassword
             )
             
             await this.userRepository.save(user)
+
+            await this.eventPublisher.publish(user.domainEvents)
+            user.clearEvents()
 
             return { userId: userId.value }
         }

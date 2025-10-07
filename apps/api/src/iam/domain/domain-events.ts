@@ -1,5 +1,5 @@
 export interface DomainEventsPublisher {
-    emit(event: DomainEvent): void
+    publish(events: DomainEvent[]): Promise<void>
 }
 
 export interface DomainEvent {
