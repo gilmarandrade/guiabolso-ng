@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test'
+import { describe, it } from 'vitest'
 import assert from 'node:assert'
 import { InMemoryUserRepository } from '../infra/InMemoryUserRepository'
 import type { PasswordHasher } from '../domain/types'
