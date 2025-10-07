@@ -1,9 +1,10 @@
 import type { Email } from "../domain/Email"
 import type { User } from "../domain/User"
-import type { UserId } from "../domain/UserId"
+import { UserId } from "../domain/UserId"
 import type { UserRepository } from "../domain/UserRepository"
 
 export class InMemoryUserRepository implements UserRepository {
+    public _nextId: number = 1
 
     public list: User[] = []
 
@@ -17,5 +18,9 @@ export class InMemoryUserRepository implements UserRepository {
 
     async findByEmail(email: Email): Promise<User | null> {
         return this.list.find(el => el.email.equals(email))
+    }
+
+    nextId(): UserId {
+        return new UserId(''+this._nextId++)
     }
 }
