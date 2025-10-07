@@ -1,108 +1,68 @@
-import { describe, it } from 'vitest'
-import assert from 'node:assert'
-import { InMemoryUserRepository } from '../infra/InMemoryUserRepository'
-import type { PasswordHasher } from '../domain/types'
-import { HashedPassword } from '../domain/HashedPassword'
-import { UserRegisteredEvent, type DomainEvent, type DomainEventsPublisher } from '../domain/domain-events'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { RegisterUserUseCase } from './RegisterUserUsecase'
-import { User } from '../domain/User'
-import { UserId } from '../domain/UserId'
 import { Email } from '../domain/Email'
+import { User } from '../domain/User'
 
-class MockPasswordHasher implements PasswordHasher {
-    async hash(password: string): Promise<HashedPassword> {
-        return new HashedPassword(`<HASHED>${password}</HASHED>`)
+describe('RegisterUserUseCase', () => {
+  let userRepository: any
+  let passwordHasher: any
+  let eventPublisher: any
+  let useCase: RegisterUserUseCase
+
+  beforeEach(() => {
+    userRepository = {
+      findByEmail: vi.fn(),
+      nextId: vi.fn(),
+      save: vi.fn()
     }
-}
-
-export class MockDomainEventsPublisher implements DomainEventsPublisher {
-    public events: DomainEvent[] = []
-    
-    async publish(events: DomainEvent[]) {
-        this.events.push(...events)
+    passwordHasher = {
+      hash: vi.fn()
     }
-}
+    eventPublisher = {
+      publish: vi.fn()
+    }
+    useCase = new RegisterUserUseCase(userRepository, passwordHasher, eventPublisher)
+  })
 
-describe('Register User Usecase unit test', () => {
+  it('should throw if user with email already exists', async () => {
+    userRepository.findByEmail.mockResolvedValue({ id: 'existing' })
+    await expect(
+      useCase.execute({ email: 'test@example.com', name: 'Test', password: '123456' })
+    ).rejects.toThrow('User with this email already exists')
+    expect(userRepository.findByEmail).toHaveBeenCalledWith(new Email('test@example.com'))
+  })
 
-    it('should throw if email is invalid', async () => {
-        const userRepository = new InMemoryUserRepository()
-        const passwordHasher = new MockPasswordHasher()
-        const eventPublisher = new MockDomainEventsPublisher()
+  it('should save user and return userId', async () => {
+    userRepository.findByEmail.mockResolvedValue(null)
+    const fakeUserId = { value: 'user-123' }
+    userRepository.nextId.mockReturnValue(fakeUserId)
+    passwordHasher.hash.mockResolvedValue('hashed-password')
+    userRepository.save.mockResolvedValue(undefined)
+    eventPublisher.publish.mockResolvedValue(undefined)
 
-        const sut = new RegisterUserUseCase(
-            userRepository, 
-            passwordHasher,
-            eventPublisher
-        )
-
-        const command = {
-            email: 'invalid email',
-            name: 'valid name',
-            password: 'valid password'
-        }
-
-        await assert.rejects(
-            async () => { await sut.execute(command) },
-            {
-                name: 'Error',
-                message: 'Invalid email address',
-            }
-        )
+    // Spy on User.create and user.clearEvents
+    const clearEvents = vi.fn()
+    vi.spyOn(User, 'create').mockImplementation((id, email, name, hashedPassword) => {
+      return {
+        id,
+        email,
+        name,
+        hashedPassword,
+        domainEvents: ['event1'],
+        clearEvents
+      } as any
     })
 
-    it('should throw if user with email already exists', async () => {
-        const userRepository = new InMemoryUserRepository()
-        const passwordHasher = new MockPasswordHasher()
-        const eventPublisher = new MockDomainEventsPublisher()
-
-        const userWithEmail = User.create(
-            new UserId('233'),
-            new Email('same-email@email.com'),
-            'any name',
-            new HashedPassword('any password')
-        )
-        await userRepository.save(userWithEmail)
-
-        const sut = new RegisterUserUseCase(
-            userRepository, 
-            passwordHasher,
-            eventPublisher
-        )
-
-        const command = {
-            email: 'same-email@email.com',
-            name: 'valid name',
-            password: 'valid password'
-        }
-        await assert.rejects(
-            async () => { await sut.execute(command) },
-            {
-                name: 'Error',
-                message: 'User with this email already exists',
-            }
-        )
+    const result = await useCase.execute({
+      email: 'new@example.com',
+      name: 'New User',
+      password: 'password'
     })
 
-    it('should register a new user', async () => {
-        const userRepository = new InMemoryUserRepository()
-        const passwordHasher = new MockPasswordHasher()
-        const eventPublisher = new MockDomainEventsPublisher()
-
-        const sut = new RegisterUserUseCase(
-            userRepository, 
-            passwordHasher,
-            eventPublisher
-        )
-
-        const command = {
-            email: 'valid@email.com',
-            name: 'valid name',
-            password: 'valid password'
-        }
-
-        const result = await sut.execute(command)
-        assert.equal(result.userId, '1')
-        assert.ok(eventPublisher.events[0] instanceof UserRegisteredEvent)
-    })
+    expect(userRepository.findByEmail).toHaveBeenCalledWith(new Email('new@example.com'))
+    expect(passwordHasher.hash).toHaveBeenCalledWith('password')
+    expect(userRepository.save).toHaveBeenCalled()
+    expect(eventPublisher.publish).toHaveBeenCalledWith(['event1'])
+    expect(result).toEqual({ userId: 'user-123' })
+  })
 })

@@ -1,5 +1,4 @@
-import { describe, it } from 'vitest'
-import assert from 'node:assert'
+import { describe, expect, it } from 'vitest'
 import { User } from './User'
 import { UserId } from './UserId'
 import { Email } from './Email'
@@ -14,18 +13,17 @@ describe('User (aggregate root) unit test', () => {
         const hashedPassword = new HashedPassword('valid hashed password')
         const sut = User.create(userId, email, name, hashedPassword)
 
-        assert.strictEqual(sut.id, userId)
-        assert.strictEqual(sut.email, email)
-        assert.strictEqual(sut.name, name)
+        expect(sut.id.value).toBe(userId.value)
+        expect(sut.email.value).toBe(email.value)
+        expect(sut.name).toBe(name)
 
         const userRegisteredEvent = sut.domainEvents[0] as UserRegisteredEvent
-        assert.ok(userRegisteredEvent.eventId)
-        assert.ok(userRegisteredEvent.occurredAt instanceof Date)
-        assert.equal(userRegisteredEvent.aggregateId, userId.value)
-        assert.equal(userRegisteredEvent.email, email.value)
-        assert.equal(userRegisteredEvent.name, name)
-        assert.equal(userRegisteredEvent.hashedPassword, hashedPassword.value)
-
+        expect(userRegisteredEvent.eventId).toBeDefined()
+        expect(userRegisteredEvent.occurredAt).instanceOf(Date)
+        expect(userRegisteredEvent.aggregateId).equal(userId.value)
+        expect(userRegisteredEvent.email).equal(email.value)
+        expect(userRegisteredEvent.name).equal(name)
+        expect(userRegisteredEvent.hashedPassword).equal(hashedPassword.value)
     })
 
     it('should reconstitute a user from persistence', () => {
@@ -37,10 +35,10 @@ describe('User (aggregate root) unit test', () => {
         const updatedAt = new Date()
         const sut = User.reconstitute(userId, email, name, hashedPassword, createdAt, updatedAt)
 
-        assert.strictEqual(sut.id, userId)
-        assert.strictEqual(sut.email, email)
-        assert.strictEqual(sut.name, name)
-        assert.strictEqual(sut.createdAt, createdAt)
-        assert.strictEqual(sut.updatedAt, updatedAt)
+        expect(sut.id).toEqual(userId)
+        expect(sut.email).toEqual(email)
+        expect(sut.name).toEqual(name)
+        expect(sut.createdAt).toEqual(createdAt)
+        expect(sut.updatedAt).toEqual(updatedAt)
     })
 })
