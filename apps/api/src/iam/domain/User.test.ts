@@ -4,7 +4,7 @@ import { User } from './User'
 import { UserId } from './UserId'
 import { Email } from './Email'
 import { HashedPassword } from './HashedPassword'
-import { UserRegisteredEvent, type DomainEvent, type DomainEventsPublisher } from './types'
+import { UserRegisteredEvent, type DomainEvent, type DomainEventsPublisher } from './domain-events'
 
 export class MockDomainEventsPublisher implements DomainEventsPublisher {
     public events: DomainEvent[] = []

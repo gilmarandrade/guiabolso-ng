@@ -1,6 +1,6 @@
 import type { Email } from "./Email"
 import type { HashedPassword } from "./HashedPassword"
-import { UserRegisteredEvent, type DomainEventsPublisher } from "./types"
+import { UserRegisteredEvent, type DomainEventsPublisher } from "./domain-events"
 import type { UserId } from "./UserId"
 
 export class User {
