@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
-import { RegisterUserUseCase } from './RegisterUserUsecase'
+import { RegisterUserUseCase } from './RegisterUserUseCase'
 import { Email } from '../domain/Email'
 import { UserRegisteredEvent, type DomainEventsPublisher } from '../domain/domain-events'
 import type { UserRepository } from '../domain/UserRepository'

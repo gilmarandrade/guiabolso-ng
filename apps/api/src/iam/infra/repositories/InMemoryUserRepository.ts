@@ -1,7 +1,7 @@
-import type { Email } from "../domain/Email"
-import type { User } from "../domain/User"
-import { UserId } from "../domain/UserId"
-import type { UserRepository } from "../domain/UserRepository"
+import type { Email } from "../../domain/Email"
+import type { User } from "../../domain/User"
+import { UserId } from "../../domain/UserId"
+import type { UserRepository } from "../../domain/UserRepository"
 
 export class InMemoryUserRepository implements UserRepository {
     public _nextId: number = 1
