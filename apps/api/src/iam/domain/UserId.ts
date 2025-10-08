@@ -1,9 +1,11 @@
+import { DomainError } from "@utils/DomainError"
+
 export class UserId {
     public readonly value: string
 
     constructor(value: string) {
         if(!this.isValid(value)) {
-            throw new Error('User ID cannot be empty');
+            throw new DomainError('User ID cannot be empty');
         }
         this.value = value
     }

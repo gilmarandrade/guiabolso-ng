@@ -1,6 +1,7 @@
 import type { RegisterUserUseCase } from "src/iam/application/RegisterUserUseCase"
 import type { HttpRequest, HttpResponse } from "./ports"
-import { badRequest, created } from "./http-helper"
+import { badRequest, created, serverError } from "./http-helper"
+import { DomainError } from "@utils/DomainError"
 
 export class RegisterUserController {
     constructor(private readonly usecase: RegisterUserUseCase) {}
@@ -15,8 +16,12 @@ export class RegisterUserController {
         try {
             const response = await this.usecase.execute(command)
             return created(response)
-        } catch(error) {
-            return badRequest(error)
+        } catch(error: unknown) {
+            if(error instanceof DomainError) {
+                return badRequest(error)
+            }
+
+            return serverError(error)
         }
     }
 }

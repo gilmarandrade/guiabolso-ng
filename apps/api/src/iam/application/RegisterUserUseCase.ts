@@ -1,3 +1,4 @@
+import { DomainError } from "@utils/DomainError"
 import type { DomainEventsPublisher } from "../domain/domain-events"
 import { Email } from "../domain/Email"
 import type { PasswordPolicy } from "../domain/PasswordPolicy"
@@ -32,11 +33,11 @@ export class RegisterUserUseCase {
             const existingUser = await this.userRepository.findByEmail(email)
 
             if(existingUser) {
-                throw new Error('User with this email already exists')
+                throw new DomainError('User with this email already exists')
             }
 
             if(!this.passwordPolicy.satisfies(command.password)) {
-                throw new Error(this.passwordPolicy.getDescription())
+                throw new DomainError(this.passwordPolicy.getDescription())
             }
 
             const userId = this.userRepository.nextId()

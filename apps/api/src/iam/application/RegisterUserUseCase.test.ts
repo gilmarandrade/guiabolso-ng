@@ -5,6 +5,7 @@ import { UserRegisteredEvent, type DomainEventsPublisher } from '../domain/domai
 import type { UserRepository } from '../domain/UserRepository'
 import type { PasswordPolicy } from '../domain/PasswordPolicy'
 import type { PasswordHasher } from '../domain/types'
+import { DomainError } from '@utils/DomainError'
 
 function asMock(mock: any): ReturnType<typeof vi.fn> {
     return mock as ReturnType<typeof vi.fn>
@@ -49,7 +50,7 @@ describe('RegisterUserUseCase', () => {
         
         await expect(
             useCase.execute({ email: 'test@example.com', name: 'Test', password: '123456' })
-        ).rejects.toThrow('User with this email already exists')
+        ).rejects.toThrow(new DomainError('User with this email already exists'))
     })
 
     it('should throw if password does not satisfy policies', async () => {
@@ -57,7 +58,7 @@ describe('RegisterUserUseCase', () => {
         
         await expect(
             useCase.execute({ email: 'test@example.com', name: 'Test', password: '123456' })
-        ).rejects.toThrow('Password is not valid')
+        ).rejects.toThrow(new DomainError('Password is not valid'))
     })
 
     it('should save user and return userId', async () => {
