@@ -18,7 +18,7 @@ export const noContent = (data: any): HttpResponse => ({
 export const badRequest = (data: any): HttpResponse => ({
   statusCode: 400,
   body: {
-    name: data.name,
+    // name: data.name,
     message: data.message,
   }
 })
@@ -26,7 +26,7 @@ export const badRequest = (data: any): HttpResponse => ({
 export const forbidden = (data: any): HttpResponse => ({
   statusCode: 403,
   body: {
-    name: data.name,
+    // name: data.name,
     message: data.message,
   }
 })
@@ -34,7 +34,7 @@ export const forbidden = (data: any): HttpResponse => ({
 export const serverError = (data: any): HttpResponse => ({
   statusCode: 500,
   body: {
-    name: 'ServerError',
+    // name: 'ServerError',
     message: data.toString(),
   }
 })

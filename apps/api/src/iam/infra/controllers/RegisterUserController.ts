@@ -1,6 +1,6 @@
 import type { RegisterUserUseCase } from "src/iam/application/RegisterUserUseCase"
 import type { HttpRequest, HttpResponse } from "./ports"
-import { created } from "./http-helper"
+import { badRequest, created } from "./http-helper"
 
 export class RegisterUserController {
     constructor(private readonly usecase: RegisterUserUseCase) {}
@@ -12,7 +12,11 @@ export class RegisterUserController {
             password: request.body.password
         }
 
-        const response = await this.usecase.execute(command)
-        return created(response)
+        try {
+            const response = await this.usecase.execute(command)
+            return created(response)
+        } catch(error) {
+            return badRequest(error)
+        }
     }
 }
